@@ -173,6 +173,8 @@ app.get('/admin/best-clients', async (req, res) => {
     const { Contract } = req.app.get('models')
     const clients = await Profile.findAll({ attributes: ['id', 'firstName', 'lastName'], where: { type: 'client' }, include: [{ model: Contract, as: 'Client'}] })
     console.log("clients", JSON.stringify(clients));
+    if (!clients) return res.status(404).end()
+    res.json(clients)
 })
 
 

@@ -13,6 +13,8 @@ More validation checks for input and value types and better error handling and m
 
 '/admin/best-profession' - This API is incomplete, however the idea was to get the jobs associated to the users using sequelize query, add the sums and create a object with mapping of professions, total sum of money and return the profession with maximum sum.
 
+'/admin/best-clients' -This API is incomplete,  the idea was to get the jobs associated to the users using sequelize query to get associated contract and associated job, add the sums of the total jobs they paid for create a object with mapping of id,full name, total sum of money paid and return the client with maximum amounts up to the specified limit(defaulted to 2).
+
 
 
 
