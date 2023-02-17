@@ -1,3 +1,9 @@
+Please note things I did not add but would have liked to:
+More validation checks and error handling messages
+
+
+
+
 # DEEL BACKEND TASK
 
 💫 Welcome! 🎉
@@ -98,4 +104,3 @@ When you have finished the assignment, zip your repo (make sure to include .git 
 Thank you and good luck! 🙏
 
 
-Please note things I did not add but would have liked to:

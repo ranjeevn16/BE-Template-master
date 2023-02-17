@@ -31,7 +31,6 @@ app.get('/contracts', getProfile, async (req, res) => {
 /**
  * @returns  all unpaid jobs for a user 
  */
-
 app.get('/jobs/unpaid', getProfile, async (req, res) => {
     const { Job } = req.app.get('models')
     const { Contract } = req.app.get('models')
@@ -63,7 +62,7 @@ app.post('/jobs/:job_id/pay', getProfile, async (req, res) => {
     const job = await Job.findOne({ where: { id: job_id } });
     console.log("Job found:", JSON.stringify(job));
 
-    if (req.profile.balance > job.price) {
+    if (req.profile.balance >= job.price) {
         const contract = await Contract.findOne({ where: { id: job.ContractId } });
         console.log("contract found:", JSON.stringify(contract));
 
@@ -127,72 +126,54 @@ app.post('/jobs/:job_id/pay', getProfile, async (req, res) => {
 
 })
 /**
- * transfer balance from client to contractor
+ * deposit money to client balance 
  */
-app.post('/balances/deposit/:userId', getProfile, async (req, res) => {
+app.post('/balances/deposit/:userId', async (req, res) => {
     const { Job } = req.app.get('models')
     const { Profile } = req.app.get('models')
     const { Contract } = req.app.get('models')
     const { userId } = req.params;
-    const contracts = await Job.findAll({ where: { ClientId: req.profile.id, paid: null } });
+    const contracts = await Contract.findAll({ attributes: ['id'], where: {  ClientId: userId , [Op.not]: [{ status: "terminated" }] }});
+    console.log("contracts",JSON.stringify(contracts));
+    let contractsList =[];
+    for(i =0;i<contracts.length;i++){
+        contractsList.push(contracts[i].id)
+    }
+     console.log("contracts",JSON.stringify(contractsList));
 
-    const jobs = await Job.findAll({ where: { ClientId: req.profile.id, paid: null } });
+    //find jobs for the list of contracts    
+    const jobs = await Job.findAll({ where: { paid: null, ContractId: contractsList } });
+
     const amountToPay= req.body.amountToPay
     console.log("Jobs found:", JSON.stringify(jobs));
+    let jobTotalSum = 0;
 
-    for (i = 0; i < jobs; i++) {
-        let jobTotalSum = 0;
+    for (i = 0; i < jobs.length; i++) {
         jobTotalSum = jobTotalSum + jobs[i].price;
     }
-    console.log("jobtotalsum",jobTotalSum);
+    console.log("jobtotalsum",0.25*jobTotalSum);
 
-    if ((amountToPay >(0.25*jobTotalSum)) && (amountToPay <= req.profile.balance)) {
-        const contractor = await Profile.findOne({ where: { id: userId } });
-        console.log("Profile found:", JSON.stringify(contractor));
-        clientBalance = req.profile.balance - amountToPay;
-        contractorBalance = contractor.balance + amountToPay;
-        console.log("Balance:", clientBalance, contractorBalance);
+    if ((amountToPay <=(0.25*jobTotalSum))) {
+        const client = await Profile.findOne({ where: { id: userId } });
+        console.log("Profile found:", JSON.stringify(client));
+        clientBalance = client.balance + amountToPay;
+        console.log("Balance:", clientBalance);
+        const balanceUpdate = await Profile.update({ balance: clientBalance },{ where: { id: userId } });
+        if (!balanceUpdate) return res.status(404).end()
+        res.json(balanceUpdate)
         
-
-        const t = await sequelize.transaction();
-
-        try {
-
-            // Create transactions to update contractor and client balances, contract status and job date
-
-            const clientBalanceUpdate = await Profile.update({ balance: clientBalance }, {
-                where: {
-                    id: req.profile.id
-                }
-            }, { transaction: t });
-            await Profile.update({ balance: contractorBalance }, {
-                where: {
-                    id: contractor.id
-                }
-            }, { transaction: t });
-
-            // If the execution reaches this line, no errors were thrown.
-            // We commit the transaction.
-            console.log("here");
-            await t.commit();
-            if (!clientBalanceUpdate) return res.status(404).end()
-            res.json(clientBalanceUpdate)
-
-        } catch (error) {
-
-            // If the execution reaches this line, an error was thrown.
-            // We rollback the transaction.
-            await t.rollback();
-
-        }
     }
-    else {
-        res.json("Cannot complete transaction due to insufficient funds")
+    else{
+        res.json("Cannot complete transaction as amount exceeds 25% of jobs to be paid")
 
     }
+
+
+     
 
 
 })
+
 
 
 module.exports = app;
