@@ -1,5 +1,11 @@
-Please note things I did not add but would have liked to:
-More validation checks and error handling messages
+Notes:
+
+'/balances/deposit/:userId' API requires req.body in JSON format example: {"amountToPay":23000}
+
+.git folder is present in directory but is a hidden file, can be viewed using ls -a command on terminal
+
+Please note things I did not add but would have liked to due to time constraints:
+More validation checks for input and value types and better error handling and messages for all edge case scenarios  
 
 
 

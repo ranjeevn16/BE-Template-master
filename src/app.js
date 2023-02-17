@@ -127,6 +127,7 @@ app.post('/jobs/:job_id/pay', getProfile, async (req, res) => {
 })
 /**
  * deposit money to client balance 
+ * requires req.body in JSON format, example: {"amountToPay":23000}
  */
 app.post('/balances/deposit/:userId', async (req, res) => {
     const { Job } = req.app.get('models')
@@ -171,6 +172,54 @@ app.post('/balances/deposit/:userId', async (req, res) => {
 
      
 
+
+})
+
+app.get('/admin/best-profession?start=<date>&end=<date>', async (req, res) => {
+    const { Contract } = req.app.get('models')
+    const { id } = req.params;
+    const contract = await Contract.findOne({ where: { id, [Op.or]: [{ ContractorId: req.profile.id }, { ClientId: req.profile.id }] } })
+    if (!contract) return res.status(404).end()
+    res.json(contract)
+
+})
+/**
+ * Returns the profession that earned the most money (sum of jobs paid) for any contactor that worked in the query time range
+ */
+app.get('/admin/best-clients', async (req, res) => {
+    const { Job } = req.app.get('models')
+    const { Profile } = req.app.get('models')
+    const { Contract } = req.app.get('models')  
+    const clients = await Profile.findAll({ attributes: ['id','firstName','lastName'], where: {type:'client' }}) 
+    console.log("clients",JSON.stringify(clients));
+
+    let clientArray =[]
+  
+    for(i =0;i<clients.length;i++){
+        let contractsList =[];
+        let sumOfJobTotal = 0;
+        const contractsforUser = await Contract.findAll({ where: { ClientId:clients[i].id} })
+       
+        for(i =0;i<contractsforUser.length;i++){
+            contractsList.push(contractsforUser[i].id)     
+        }
+         console.log("contracts",JSON.stringify(contractsList));
+    
+        //find jobs for the list of contracts    
+        let jobs = await Job.findAll({ where: { paid: true, ContractId: contractsList } });
+        for(i =0;i<jobs.length;i++){
+            sumOfJobTotal=  sumOfJobTotal +jobs[i].price;
+        }
+        console.log("sumOfJobTotal",JSON.stringify(sumOfJobTotal));
+        topClientInfo ={ "id": clients[i].id,"fullName": firstName + ' '+ lastName,paid:sumOfJobTotal  }
+        console.log("topClientInfo",topClientInfo);
+
+        
+    
+    }
+    
+    // if (!clientArray) return res.status(404).end()
+    // res.json(clientArray)
 
 })
 
