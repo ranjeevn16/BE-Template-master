@@ -96,3 +96,6 @@ It would be great for example if you'd write some unit test / simple frontend de
 When you have finished the assignment, zip your repo (make sure to include .git folder) and send us the zip.
 
 Thank you and good luck! 🙏
+
+
+Please note things I did not add but would have liked to:
